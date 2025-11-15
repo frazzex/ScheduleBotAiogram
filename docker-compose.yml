@@ -1,0 +1,15 @@
+services:
+  schedule-bot:
+    container_name: schedule-bot
+    build: .
+    command: ['python', '.\main.py']
+    restart: always
+    ports:
+      - '443:443'
+    environment:
+      -BOT_TOKEN: ${BOT_TOKEN}
+    volumes:
+      - .:/var/ScheduleBotAiogram
+
+
+
