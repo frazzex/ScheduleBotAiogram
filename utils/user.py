@@ -1,5 +1,6 @@
 from models import User
 
+
 async def get_or_create_user(user_id: int, username: str = None, full_name: str = None) -> User:
     """Получить или создать пользователя"""
     user, created = await User.get_or_create(

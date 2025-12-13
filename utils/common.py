@@ -1,5 +1,6 @@
 from datetime import datetime
 
+
 def is_even_week_from_september() -> bool:
     today = datetime.now().date()
     september_start = datetime(today.year, 9, 1).date()

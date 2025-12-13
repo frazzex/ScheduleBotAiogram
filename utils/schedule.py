@@ -2,6 +2,7 @@ from models import User
 from models import Lesson
 from .common import time_to_minutes
 
+
 async def get_schedule_for_user(user: User, week_type: str, show_all: bool = False) -> str:
     """Получить расписание для пользователя с учетом его подгруппы
 
@@ -74,6 +75,7 @@ async def get_schedule_for_user(user: User, week_type: str, show_all: bool = Fal
 
     return schedule_text
 
+
 async def get_general_schedule(week_type: str) -> str:
     """Получить общее расписание для всех подгрупп"""
     day_names = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
@@ -115,4 +117,3 @@ async def get_general_schedule(week_type: str) -> str:
         schedule_text += lesson_str
 
     return schedule_text
-
