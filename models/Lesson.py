@@ -2,38 +2,6 @@ from tortoise.models import Model
 from tortoise import fields
 
 
-class User(Model):
-    """Модель пользователя"""
-    id = fields.BigIntField(pk=True)
-    username = fields.CharField(max_length=255, null=True)
-    full_name = fields.CharField(max_length=255, null=True)
-    subgroup = fields.IntField(null=True)
-    group = fields.CharField(max_length=50, null=True)
-    created_at = fields.DatetimeField(auto_now_add=True)
-    updated_at = fields.DatetimeField(auto_now=True)
-    is_admin = fields.BooleanField(default=False)
-
-    class Meta:
-        table = "users"
-
-    def __str__(self):
-        return f"User {self.id} ({self.full_name})"
-
-
-class Subject(Model):
-    """Модель предмета"""
-    id = fields.IntField(pk=True)
-    name = fields.CharField(max_length=255)  # Название предмета
-    short_name = fields.CharField(max_length=100, null=True)  # Короткое название
-    created_at = fields.DatetimeField(auto_now_add=True)
-
-    class Meta:
-        table = "subjects"
-
-    def __str__(self):
-        return self.name
-
-
 class Lesson(Model):
     """Модель пары (урока)"""
     id = fields.IntField(pk=True)
@@ -59,4 +27,3 @@ class Lesson(Model):
         """Возвращает название дня недели"""
         days = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
         return days[self.day_of_week] if 0 <= self.day_of_week < 7 else "Неизвестно"
-
