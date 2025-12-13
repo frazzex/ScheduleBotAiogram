@@ -3,14 +3,17 @@ import logging
 import sys
 from os import getenv
 import dotenv
-from datetime import datetime
 from aiogram import Bot, Dispatcher, html, F
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
-from models import User, Lesson
 from database import init_db, close_db
+
+from utils.user import get_or_create_user
+from utils.common import is_even_week_from_september
+from utils.schedule import get_general_schedule, get_schedule_for_user
+
 
 # Bot token can be obtained via https://t.me/BotFather
 dotenv.load_dotenv()
@@ -19,164 +22,6 @@ TOKEN = getenv("BOT_TOKEN")
 # All handlers should be attached to the Router (or Dispatcher)
 
 dp = Dispatcher()
-
-
-def is_even_week_from_september() -> bool:
-    today = datetime.now().date()
-    september_start = datetime(today.year, 9, 1).date()
-    if today < september_start:
-        september_start = datetime(today.year - 1, 9, 1).date()
-    days_since_september = (today - september_start).days
-
-    week_number = days_since_september // 7 + 1
-
-    return week_number % 2 == 0
-
-
-async def get_or_create_user(user_id: int, username: str = None, full_name: str = None) -> User:
-    """Получить или создать пользователя"""
-    user, created = await User.get_or_create(
-        id=user_id,
-        defaults={
-            'username': username,
-            'full_name': full_name
-        }
-    )
-    if not created:
-        # Обновляем данные, если они изменились
-        if username and user.username != username:
-            user.username = username
-        if full_name and user.full_name != full_name:
-            user.full_name = full_name
-        await user.save()
-    return user
-
-
-def time_to_minutes(time_str: str) -> int:
-    """Преобразует время в формате 'HH:MM' в минуты с начала дня"""
-    try:
-        parts = time_str.split(':')
-        if len(parts) == 2:
-            return int(parts[0]) * 60 + int(parts[1])
-        return 0
-    except (ValueError, AttributeError):
-        return 0
-
-
-async def get_schedule_for_user(user: User, week_type: str, show_all: bool = False) -> str:
-    """Получить расписание для пользователя с учетом его подгруппы
-    
-    Args:
-        user: Пользователь
-        week_type: Тип недели ("even" или "odd")
-        show_all: Если True, показывать все пары (общее расписание), иначе только для подгруппы пользователя
-    """
-    day_names = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
-
-    week_label = "ЧЁТНАЯ НЕДЕЛЯ" if week_type == "even" else "НЕЧЁТНАЯ НЕДЕЛЯ"
-    schedule_text = f"**{week_label}**\n\n"
-
-    # Получаем все пары для данной недели
-    lessons_query = Lesson.filter(
-        week_type__in=[week_type, None]  # Пары для данной недели или для обеих
-    ).prefetch_related('subject').order_by('day_of_week', 'start_time')
-
-    lessons = await lessons_query
-
-    if not lessons:
-        return schedule_text + "Расписание пока не заполнено в базе данных."
-
-    # Фильтруем по подгруппе и сортируем по времени
-    filtered_lessons = []
-    for lesson in lessons:
-        # Фильтруем по подгруппе, если не показываем все
-        if not show_all:
-            if lesson.subgroup is not None and user.subgroup is not None:
-                if lesson.subgroup != user.subgroup:
-                    continue
-        filtered_lessons.append(lesson)
-
-    # Сортируем по дню недели и времени начала
-    filtered_lessons.sort(key=lambda l: (l.day_of_week, time_to_minutes(l.start_time)))
-
-    current_day = -1
-    has_lessons = False
-
-    for lesson in filtered_lessons:
-        # Фильтруем по подгруппе, если не показываем все
-        if not show_all:
-            if lesson.subgroup is not None and user.subgroup is not None:
-                if lesson.subgroup != user.subgroup:
-                    continue
-
-        has_lessons = True
-
-        # Если день изменился, добавляем заголовок дня
-        if lesson.day_of_week != current_day:
-            if current_day != -1:
-                schedule_text += "\n"
-            schedule_text += f"**{day_names[lesson.day_of_week]}:**\n"
-            current_day = lesson.day_of_week
-
-        # Формируем строку пары
-        lesson_str = f"- {lesson.start_time}–{lesson.end_time} — «{lesson.subject.name}» ({lesson.lesson_type})"
-        if lesson.teacher:
-            lesson_str += f", {lesson.teacher}"
-        if lesson.classroom:
-            lesson_str += f", ауд. {lesson.classroom}"
-        if lesson.subgroup:
-            lesson_str += f" ({lesson.subgroup} подгруппа)"
-        lesson_str += ";\n"
-
-        schedule_text += lesson_str
-
-    if not has_lessons:
-        return schedule_text + "Нет пар для твоей подгруппы на этой неделе."
-
-    return schedule_text
-
-
-async def get_general_schedule(week_type: str) -> str:
-    """Получить общее расписание для всех подгрупп"""
-    day_names = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
-
-    week_label = "ЧЁТНАЯ НЕДЕЛЯ" if week_type == "even" else "НЕЧЁТНАЯ НЕДЕЛЯ"
-    schedule_text = f"**{week_label}**\n\n"
-
-    # Получаем все пары для данной недели
-    lessons = await Lesson.filter(
-        week_type__in=[week_type, None]
-    ).prefetch_related('subject').order_by('day_of_week', 'start_time')
-
-    if not lessons:
-        return schedule_text + "Расписание пока не заполнено в базе данных."
-
-    # Сортируем по дню недели и времени начала
-    lessons_list = list(lessons)
-    lessons_list.sort(key=lambda l: (l.day_of_week, time_to_minutes(l.start_time)))
-
-    current_day = -1
-    for lesson in lessons_list:
-        # Если день изменился, добавляем заголовок дня
-        if lesson.day_of_week != current_day:
-            if current_day != -1:
-                schedule_text += "\n"
-            schedule_text += f"**{day_names[lesson.day_of_week]}:**\n"
-            current_day = lesson.day_of_week
-
-        # Формируем строку пары
-        lesson_str = f"- {lesson.start_time}–{lesson.end_time} — «{lesson.subject.name}» ({lesson.lesson_type})"
-        if lesson.teacher:
-            lesson_str += f", {lesson.teacher}"
-        if lesson.classroom:
-            lesson_str += f", ауд. {lesson.classroom}"
-        if lesson.subgroup:
-            lesson_str += f" ({lesson.subgroup} подгруппа)"
-        lesson_str += ";\n"
-
-        schedule_text += lesson_str
-
-    return schedule_text
 
 
 def get_main_keyboard(user_subgroup: int = None) -> InlineKeyboardMarkup:
