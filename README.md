@@ -11,7 +11,7 @@
 
 1. **Клонируйте репозиторий:**
    Клонируйте проект из GitHub с помощью команды:
-``https://github.com/frazzex/ScheduleBotAiogram.git``
+``git clone https://github.com/frazzex/ScheduleBotAiogram.git``
 
 ---
 2. Перейдите в репозиторий проекта
