@@ -7,13 +7,13 @@ from aiogram import Bot, Dispatcher, html, F
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, CallbackQuery
 from database import init_db, close_db
 
 from utils.user import get_or_create_user
 from utils.common import is_even_week_from_september
 from utils.schedule import get_general_schedule, get_schedule_for_user
-
+from keyboards import get_main_keyboard
 
 # Bot token can be obtained via https://t.me/BotFather
 dotenv.load_dotenv()
@@ -22,33 +22,6 @@ TOKEN = getenv("BOT_TOKEN")
 # All handlers should be attached to the Router (or Dispatcher)
 
 dp = Dispatcher()
-
-
-def get_main_keyboard(user_subgroup: int = None) -> InlineKeyboardMarkup:
-    """Создает главную клавиатуру с кнопками"""
-    keyboard = []
-
-    if user_subgroup is None:
-        # Если подгруппа не выбрана, показываем кнопки для выбора
-        keyboard.append([
-            InlineKeyboardButton(text="1 подгруппа", callback_data="subgroup_1"),
-            InlineKeyboardButton(text="2 подгруппа", callback_data="subgroup_2")
-        ])
-    else:
-        # Если подгруппа выбрана, показываем кнопки расписания
-        keyboard.append([
-            InlineKeyboardButton(text="📅 Текущая неделя", callback_data="schedule_current"),
-            InlineKeyboardButton(text="📅 Следующая неделя", callback_data="schedule_next")
-        ])
-        keyboard.append([
-            InlineKeyboardButton(text="📋 Общее расписание (текущая)", callback_data="schedule_general_current"),
-            InlineKeyboardButton(text="📋 Общее расписание (следующая)", callback_data="schedule_general_next")
-        ])
-        keyboard.append([
-            InlineKeyboardButton(text="⚙️ Изменить подгруппу", callback_data="change_subgroup")
-        ])
-
-    return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
 @dp.message(CommandStart())
