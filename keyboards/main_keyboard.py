@@ -21,6 +21,9 @@ def get_main_keyboard(user_subgroup: int = None) -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="📋 Общее расписание (следующая)", callback_data="schedule_general_next")
         ])
         keyboard.append([
+            InlineKeyboardButton(text="Показать расписание на сегодня", callback_data="show_today_schedule")
+        ])
+        keyboard.append([
             InlineKeyboardButton(text="⚙️ Изменить подгруппу", callback_data="change_subgroup")
         ])
 

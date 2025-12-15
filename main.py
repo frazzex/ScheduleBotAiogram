@@ -14,6 +14,7 @@ from utils.user import get_or_create_user
 from utils.common import is_even_week_from_september
 from utils.schedule import get_general_schedule, get_schedule_for_user
 from keyboards import get_main_keyboard
+from utils.schedule import get_today_schedule
 
 # Bot token can be obtained via https://t.me/BotFather
 dotenv.load_dotenv()
@@ -249,8 +250,30 @@ async def echo_handler(message: Message) -> None:
         "Или используй кнопки ниже:",
         reply_markup=get_main_keyboard(user.subgroup)
     )
+async def get_today_schedule(user):
+    week_type = "even" if is_even_week_from_september() else "odd"
+    schedule_text = await get_schedule_for_user(user, week_type, day="today")
+    return schedule_text
+@dp.callback_query(F.data == "show_today_schedule")
+async def callback_show_today_schedule(callback: CallbackQuery) -> None:
+    await callback.answer()
 
+    user = await get_or_create_user(
+        user_id=callback.from_user.id,
+        username=callback.from_user.username,
+        full_name=callback.from_user.full_name
+    )
 
+    if user.subgroup is None:
+        await callback.answer("Сначала выбери подгруппу!", show_alert=True)
+        return
+    schedule_text = await get_today_schedule(user)
+    if len(schedule_text) > 4096:
+        parts = [schedule_text[i:i + 4096] for i in range(0, len(schedule_text), 4096)]
+        for part in parts:
+            await callback.message.answer(part, parse_mode=ParseMode.MARKDOWN)
+    else:
+        await callback.message.answer(schedule_text, parse_mode=ParseMode.MARKDOWN)
 async def main() -> None:
     # Инициализация базы данных
     await init_db()
