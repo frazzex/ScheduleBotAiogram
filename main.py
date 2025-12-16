@@ -14,6 +14,7 @@ from utils.user import get_or_create_user
 from utils.common import is_even_week_from_september
 from utils.schedule import get_general_schedule, get_schedule_for_user
 from keyboards import get_main_keyboard
+from handlers import start
 
 # Bot token can be obtained via https://t.me/BotFather
 dotenv.load_dotenv()
@@ -23,28 +24,7 @@ TOKEN = getenv("BOT_TOKEN")
 
 dp = Dispatcher()
 
-
-@dp.message(CommandStart())
-async def command_start_handler(message: Message) -> None:
-    """
-    Обработчик команды /start
-    """
-    user = await get_or_create_user(
-        user_id=message.from_user.id,
-        username=message.from_user.username,
-        full_name=message.from_user.full_name
-    )
-
-    greeting = f"Привет, {html.bold(message.from_user.full_name)}!\n\n"
-
-    if user.subgroup is None:
-        greeting += "Для начала выбери свою подгруппу:"
-        await message.answer(greeting, reply_markup=get_main_keyboard())
-    else:
-        greeting += f"Твоя подгруппа: {user.subgroup}\n\n"
-        greeting += "Выбери, что хочешь посмотреть:"
-        await message.answer(greeting, reply_markup=get_main_keyboard(user.subgroup))
-
+dp.include_routers(start.router)
 
 @dp.message(Command("subgroup"))
 async def command_subgroup_handler(message: Message) -> None:
