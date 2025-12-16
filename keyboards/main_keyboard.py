@@ -1,5 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 
+
 def get_main_keyboard(user_subgroup: int = None) -> InlineKeyboardMarkup:
     """Создает главную клавиатуру с кнопками"""
     keyboard = []
@@ -25,6 +26,8 @@ def get_main_keyboard(user_subgroup: int = None) -> InlineKeyboardMarkup:
         ])
 
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
 def get_reply_main_keyboard() -> ReplyKeyboardMarkup:
     """Создает reply-клавиатуру с кнопкой 'Расписание на сегодня'"""
     return ReplyKeyboardMarkup(
