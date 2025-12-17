@@ -4,6 +4,7 @@ from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 
 from models import User
+from utils.decorators import require_subgroup
 
 from utils.schedule import (
     get_today_lessons_for_user,
@@ -22,9 +23,16 @@ router = Router()
 
 
 @router.message(Command("start"))
-async def cmd_start(message: Message, user: User):
-    text = "Привет! Это бот с расписанием 👋\n\nВыберите подгруппу в настройках, чтобы видеть своё расписание."
-    await message.answer(text, reply_markup=get_main_menu_keyboard())
+async def cmd_start(message: Message, user: User, state: FSMContext):
+    text = "Привет! Это бот с расписанием 👋\n\n"
+
+    if user.subgroup is None:
+        text += 'Сначала выберите свою подгруппу!'
+        await state.set_state(SettingsState.choose_subgroup)
+        return await message.answer(text, reply_markup=get_subgroup_keyboard())
+
+    text += 'Воспользуйтесь меню для отображения вашего расписания'
+    return await message.answer(text, reply_markup=get_main_menu_keyboard())
 
 
 @router.message(Command("settings"))
@@ -52,21 +60,24 @@ async def process_subgroup(message: Message, state: FSMContext, user: User):
 
 
 @router.message(F.text == "📅 На сегодня")
-async def menu_today(message: Message, user: User):
+@require_subgroup
+async def menu_today(message: Message, user: User, state: FSMContext):
     lessons = await get_today_lessons_for_user(user)
     text = format_today_schedule(lessons)
     await message.answer(text)
 
 
 @router.message(F.text == "📚 Моё расписание (чётная)")
-async def menu_week_even(message: Message, user: User):
+@require_subgroup
+async def menu_week_even(message: Message, user: User, state: FSMContext):
     lessons = await get_user_week_lessons(user, "even")
     text = format_user_week_schedule(lessons, "even")
     await message.answer(text)
 
 
 @router.message(F.text == "📚 Моё расписание (нечётная)")
-async def menu_week_odd(message: Message, user: User):
+@require_subgroup
+async def menu_week_odd(message: Message, user: User, state: FSMContext):
     lessons = await get_user_week_lessons(user, "odd")
     text = format_user_week_schedule(lessons, "odd")
     await message.answer(text)
@@ -87,17 +98,20 @@ async def menu_general_odd(message: Message, user: User):
 
 
 @router.message(Command("today"))
-async def cmd_today(message: Message, user: User):
+@require_subgroup
+async def cmd_today(message: Message, user: User, state: FSMContext):
     await menu_today(message, user)
 
 
 @router.message(Command("week_even"))
-async def cmd_week_even(message: Message, user: User):
+@require_subgroup
+async def cmd_week_even(message: Message, user: User, state: FSMContext):
     await menu_week_even(message, user)
 
 
 @router.message(Command("week_odd"))
-async def cmd_week_odd(message: Message, user: User):
+@require_subgroup
+async def cmd_week_odd(message: Message, user: User, state: FSMContext):
     await menu_week_odd(message, user)
 
 
