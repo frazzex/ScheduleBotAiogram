@@ -1,7 +1,5 @@
-from datetime import datetime
-
-# utils/week_utils.py
 from datetime import date
+
 
 
 def is_even_week_from_september(target_date: date | None = None) -> bool:
@@ -20,11 +18,5 @@ def is_even_week_from_september(target_date: date | None = None) -> bool:
 
 
 def time_to_minutes(time_str: str) -> int:
-    """Преобразует время в формате 'HH:MM' в минуты с начала дня"""
-    try:
-        parts = time_str.split(':')
-        if len(parts) == 2:
-            return int(parts[0]) * 60 + int(parts[1])
-        return 0
-    except (ValueError, AttributeError):
-        return 0
+    time_parts = time_str.split(':')
+    return int(time_parts[0]) * 60 + int(time_parts[1])

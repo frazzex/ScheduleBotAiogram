@@ -86,7 +86,6 @@ async def menu_general_odd(message: Message, user: User):
     await message.answer(text)
 
 
-# Команды для совместимости
 @router.message(Command("today"))
 async def cmd_today(message: Message, user: User):
     await menu_today(message, user)

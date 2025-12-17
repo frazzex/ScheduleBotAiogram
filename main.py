@@ -1,4 +1,3 @@
-# main.py
 import asyncio
 import os
 
@@ -31,7 +30,7 @@ match ENVIRONMENT:
 async def main():
     bot = Bot(
         token=BOT_TOKEN,
-        default=DefaultBotProperties(parse_mode=None)  # Отключаем MarkdownV2 глобально
+        default=DefaultBotProperties(parse_mode=None)
     )
     storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
