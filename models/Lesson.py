@@ -3,18 +3,16 @@ from tortoise import fields
 
 
 class Lesson(Model):
-    """Модель пары (урока)"""
     id = fields.IntField(pk=True)
     subject = fields.ForeignKeyField('models.Subject', related_name='lessons')
-    day_of_week = fields.IntField()  # 0-Понедельник, 1-Вторник, ..., 6-Воскресенье
-    start_time = fields.CharField(max_length=10)  # Формат "HH:MM"
-    end_time = fields.CharField(max_length=10)  # Формат "HH:MM"
-    lesson_type = fields.CharField(max_length=50)  # л, пр, лаб
-    teacher = fields.CharField(max_length=255, null=True)  # Преподаватель
-    classroom = fields.CharField(max_length=50, null=True)  # Аудитория
-    week_type = fields.CharField(max_length=10, null=True)  # "even", "odd", или null для обеих
-    subgroup = fields.IntField(null=True)  # 1, 2 или null для обеих подгрупп
-    group = fields.CharField(max_length=50, null=True)  # Группа
+    day_of_week = fields.IntField()
+    start_time = fields.CharField(max_length=10)
+    end_time = fields.CharField(max_length=10)
+    lesson_type = fields.CharField(max_length=50)
+    teacher = fields.CharField(max_length=255, null=True)
+    classroom = fields.CharField(max_length=50, null=True)
+    week_type = fields.CharField(max_length=10, null=True)
+    subgroup = fields.IntField(null=True)
     created_at = fields.DatetimeField(auto_now_add=True)
 
     class Meta:
