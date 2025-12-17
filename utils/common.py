@@ -1,15 +1,21 @@
 from datetime import datetime
 
+# utils/week_utils.py
+from datetime import date
 
-def is_even_week_from_september() -> bool:
-    today = datetime.now().date()
-    september_start = datetime(today.year, 9, 1).date()
-    if today < september_start:
-        september_start = datetime(today.year - 1, 9, 1).date()
-    days_since_september = (today - september_start).days
 
+def is_even_week_from_september(target_date: date | None = None) -> bool:
+    if target_date is None:
+        target_date = date.today()
+
+    year = target_date.year
+    september_start = date(year, 9, 1)
+
+    if target_date < september_start:
+        september_start = date(year - 1, 9, 1)
+
+    days_since_september = (target_date - september_start).days
     week_number = days_since_september // 7 + 1
-
     return week_number % 2 == 0
 
 
